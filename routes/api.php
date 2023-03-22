@@ -31,7 +31,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Filiere
+// Filieres
 /*
 Route::get('/filieres',[App\Http\Controllers\FiliereController::class, 'index']);
 Route::post('/filieres/save',[App\Http\Controllers\FiliereController::class, 'store']);
