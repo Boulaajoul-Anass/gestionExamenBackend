@@ -53,7 +53,7 @@ Route::post('/login',[\App\Http\Controllers\AuthController::class, 'login']);
 Route::get('etudiant/{etudiant_id}/examen/{examen_id}/resultats', [\App\Http\Controllers\ResultatController::class, 'show']);
 
 //Les exmens des matières de la filière de l'etudiant connécté
-//Route::get('/etudiants/{id}/examens', 'App\Http\Controllers\EtudiantController@getExamsByFiliere');
+Route::get('/etudiants/{id}/examens', 'App\Http\Controllers\EtudiantController@getExamsByFiliere');
 
 //Les exmens déjà passé des matières de la filière de l'etudiant connécté
 Route::get('/etudiants/{id}/examens-passes', 'App\Http\Controllers\EtudiantController@getExamsPassedByEtudiant');
