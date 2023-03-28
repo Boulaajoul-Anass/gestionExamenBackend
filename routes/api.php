@@ -16,6 +16,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\ReponseController;
 use App\Http\Controllers\AuthController;
 
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -31,12 +32,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Filieres
-/*
-Route::get('/filieres',[App\Http\Controllers\FiliereController::class, 'index']);
-Route::post('/filieres/save',[App\Http\Controllers\FiliereController::class, 'store']);
-Route::put('/filieres/update/{id}',[App\Http\Controllers\FiliereController::class, 'update']);
-Route::delete('/filieres/delete/{id}',[App\Http\Controllers\FiliereController::class, 'destroy']);*/
 Route::apiResource('filieres',FiliereController::class);
 Route::apiResource('etudiants',EtudiantController::class);
 Route::apiResource('departements',DepartementController::class);
@@ -53,6 +48,17 @@ Route::post('/register',[\App\Http\Controllers\AuthController::class, 'register'
 Route::post('/logout',[\App\Http\Controllers\AuthController::class, 'logout']);
 Route::post('/login',[\App\Http\Controllers\AuthController::class, 'login']);
 
+
+//Requete de Correction
+Route::get('etudiant/{etudiant_id}/examen/{examen_id}/resultats', [\App\Http\Controllers\ResultatController::class, 'show']);
+
+//Les exmens des matières de la filière de l'etudiant connécté
+//Route::get('/etudiants/{id}/examens', 'App\Http\Controllers\EtudiantController@getExamsByFiliere');
+
+//Les exmens déjà passé des matières de la filière de l'etudiant connécté
+Route::get('/etudiants/{id}/examens-passes', 'App\Http\Controllers\EtudiantController@getExamsPassedByEtudiant');
+
+
 // Departement
 /*
 Route::get('/departements',[App\Http\Controllers\DepartementController::class, 'index']);
@@ -60,6 +66,12 @@ Route::post('/departements/save',[App\Http\Controllers\DepartementController::cl
 Route::put('/departements/update/{id}',[App\Http\Controllers\DepartementController::class, 'update']);
 Route::delete('/departements/delete/{id}',[App\Http\Controllers\DepartementController::class, 'destroy']);*/
 
+// Filieres
+/*
+Route::get('/filieres',[App\Http\Controllers\FiliereController::class, 'index']);
+Route::post('/filieres/save',[App\Http\Controllers\FiliereController::class, 'store']);
+Route::put('/filieres/update/{id}',[App\Http\Controllers\FiliereController::class, 'update']);
+Route::delete('/filieres/delete/{id}',[App\Http\Controllers\FiliereController::class, 'destroy']);*/
 
 // Etudiant
 

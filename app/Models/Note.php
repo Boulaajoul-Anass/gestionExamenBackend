@@ -22,4 +22,6 @@ class Note extends Model
         return $this->belongsTo(Etudiant::class);
     }
 
+
+
 }

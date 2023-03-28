@@ -54,7 +54,7 @@ class ExamenController extends Controller
      */
     public function show($id)
     {
-        $examens = Examen::find($id);
+        $examens = Examen::with("questions.propositions")->find($id);
         return response()->json($examens);
     }
 
@@ -95,4 +95,17 @@ class ExamenController extends Controller
         $examens->delete();
         return response()->json('');
     }
+
+    /*
+     *  Recuperer les examens associé à les matières de la filière de l'étudiant connecté
+     */
+    public function getExamsByFiliere()
+    {
+        $etudiant = auth()->user();
+        $examens = Examen::whereHas('matiere', function($query) use($etudiant) {
+            $query->where('filiere_id', $etudiant->filiere_id);
+        })->get();
+        return response()->json(['examens' => $examens], 200);
+    }
+
 }

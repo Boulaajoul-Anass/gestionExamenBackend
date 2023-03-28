@@ -19,4 +19,9 @@ class Filiere extends Model
     {
         return $this->hasMany(Etudiant::class);
     }
+
+    public function matieres()
+    {
+        return $this->hasMany(Etudiant::class);
+    }
 }

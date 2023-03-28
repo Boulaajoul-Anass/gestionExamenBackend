@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Etudiant;
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\MatiereController;
+use App\Models\Matiere;
 
 class EtudiantController extends Controller
 {
@@ -94,4 +95,37 @@ class EtudiantController extends Controller
         $etudiants->delete();
         return response()->json('');
     }
+
+    /*
+     * Les exmens des matières de l'etudiant connécté
+     */
+    public function getExamsByFiliere($id)
+    {
+        $etudiant = Etudiant::findOrFail($id);
+        $filiere_id = $etudiant->filiere_id;
+
+        $matieres = Matiere::where('filiere_id', $filiere_id)->get();
+        $examens = array();
+
+        foreach ($matieres as $matiere) {
+            $examens[$matiere->nom] = $matiere->examens;
+        }
+
+        return response()->json(['examens' => $examens], 200);
+    }
+    public function getExamsPassedByEtudiant($id)
+    {
+        $etudiant = Etudiant::findOrFail($id);
+        $notes = $etudiant->notes()->where('valeur', '>', 0)->get();
+        $examens = array();
+
+        foreach ($notes as $note) {
+            $examen = $note->examen;
+            $matiere = $examen->matiere;
+            $examens[$matiere->nom][] = $examen;
+        }
+
+        return response()->json(['examens' => $examens], 200);
+    }
+
 }
