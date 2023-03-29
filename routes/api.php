@@ -14,8 +14,8 @@ use App\Http\Controllers\ProfesseurController;
 use App\Http\Controllers\PropositionController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\ReponseController;
+use App\Http\Controllers\ResultatController ;
 use App\Http\Controllers\AuthController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +47,6 @@ Route::apiResource('notes',NoteController::class);
 Route::post('/register',[\App\Http\Controllers\AuthController::class, 'register']);
 Route::post('/logout',[\App\Http\Controllers\AuthController::class, 'logout']);
 Route::post('/login',[\App\Http\Controllers\AuthController::class, 'login']);
-
 
 //Requete de Correction
 Route::get('etudiant/{etudiant_id}/examen/{examen_id}/resultats', [\App\Http\Controllers\ResultatController::class, 'show']);
@@ -81,7 +80,68 @@ Route::put('/etudiants/update/{id}',[App\Http\Controllers\EtudiantController::cl
 Route::delete('/etudiants/delete/{id}',[App\Http\Controllers\EtudiantController::class, 'destroy']);
 
 // Examen
-/*
+
+// Les examens d'une filliere donnée
+Route::get('/exams/{filiere_id}', function ($filiere_id) {
+    $exams = DB::table('examens')
+        ->join('matieres', 'examens.matiere_id', '=', 'matieres.id')
+        ->join('professeurs', 'matieres.professeur_id', '=', 'professeurs.id')
+        ->join('filieres', 'matieres.filiere_id', '=', 'filieres.id')
+        ->where('filieres.id', '=', $filiere_id)
+        ->select('examens.*', 'matieres.nom as matiere_nom', 'professeurs.nom as professeur_nom', 'filieres.nom as filiere_nom', 'matieres.filiere_id')
+        ->distinct()
+        ->get();
+
+    return response()->json($exams);
+});
+
+use Illuminate\Support\Facades\DB;
+
+
+Route::get('/upcoming-exams/{filiere_id}', function ($filiere_id) {
+    $today = date('Y-m-d');
+    $upcomingExams = DB::table('examens')
+        ->join('matieres', 'examens.matiere_id', '=', 'matieres.id')
+        ->join('professeurs', 'matieres.professeur_id', '=', 'professeurs.id')
+        ->join('filieres', 'matieres.filiere_id', '=', 'filieres.id')
+        ->where('filieres.id', '=', $filiere_id)
+        ->where('date', '>', $today)
+        ->select('examens.*', 'matieres.nom as matiere_nom', 'professeurs.nom as professeur_nom', 'filieres.nom as filiere_nom')
+        ->distinct()
+        ->get();
+
+    return response()->json($upcomingExams);
+});
+
+
+Route::get('/today-exams-filiere/{filiere_id}', function ($filiere_id) {
+    $today = date('Y-m-d');
+    $currentTime = date('H:i:s', strtotime('-2 minute'));
+    $todayexams = DB::table('examens')
+        ->join('matieres', 'examens.matiere_id', '=', 'matieres.id')
+        ->join('professeurs', 'matieres.professeur_id', '=', 'professeurs.id')
+        ->join('filieres', 'matieres.filiere_id', '=', 'filieres.id')
+        ->where('filieres.id', '=', $filiere_id)
+        ->where('date', '=', $today)
+        ->where('heure', '>', DB::raw("TIME('$currentTime')"))
+        ->select('examens.*', 'matieres.nom as matiere_nom', 'professeurs.nom as professeur_nom', 'filieres.nom as filiere_nom')
+        ->distinct()
+        ->get();
+
+    return response()->json($todayexams);
+});
+
+
+
+
+
+Route::get('/exams/past', [ExamController::class, 'pastExams']);
+
+
+
+
+
+
 Route::get('/examens',[App\Http\Controllers\ExamenController::class, 'index']);
 Route::post('/examens/save',[App\Http\Controllers\ExamenController::class, 'store']);
 Route::put('/examens/update/{id}',[App\Http\Controllers\ExamenController::class, 'update']);
@@ -121,4 +181,4 @@ Route::delete('/questions/delete/{id}',[App\Http\Controllers\QuestionController:
 Route::get('/reponses',[App\Http\Controllers\ReponseController::class, 'index']);
 Route::post('/reponses/save',[App\Http\Controllers\ReponseController::class, 'store']);
 Route::put('/reponses/update/{id}',[App\Http\Controllers\ReponseController::class, 'update']);
-Route::delete('/reponses/delete/{id}',[App\Http\Controllers\ReponseController::class, 'destroy']);*/
+Route::delete('/reponses/delete/{id}',[App\Http\Controllers\ReponseController::class, 'destroy']);
