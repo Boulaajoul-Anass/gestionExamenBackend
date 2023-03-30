@@ -80,6 +80,7 @@ Route::put('/etudiants/update/{id}',[App\Http\Controllers\EtudiantController::cl
 Route::delete('/etudiants/delete/{id}',[App\Http\Controllers\EtudiantController::class, 'destroy']);
 
 // Examen
+Route::get('/examens/{filiere_id}',[App\Http\Controllers\ExamenController::class, 'show']);
 
 // Les examens d'une filliere donnée
 Route::get('/exams/{filiere_id}', function ($filiere_id) {

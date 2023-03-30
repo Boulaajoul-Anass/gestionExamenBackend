@@ -14,8 +14,8 @@ class AuthController extends Controller
             'nom' => 'required|string' ,
             'prenom' => 'required|string',
             'email' => 'required|string|unique:etudiants,email',
-            'password' => 'required|string|confirmed',
-            'filiere_id'=> 'required|string'
+            'password' => 'required|string',
+            'filiere_id'=> 'required|integer'
         ]);
 
         $etudiant = Etudiant::create([

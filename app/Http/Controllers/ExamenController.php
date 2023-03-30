@@ -54,8 +54,9 @@ class ExamenController extends Controller
      */
     public function show($id)
     {
-        $examens = Examen::with("questions.propositions")->find($id);
-        return response()->json($examens);
+        $exam = Examen::with(['matiere', 'questions.propositions'])->findOrFail($id);
+
+        return response()->json($exam);
     }
 
     /**
