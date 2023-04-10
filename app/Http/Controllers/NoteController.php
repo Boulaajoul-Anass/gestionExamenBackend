@@ -36,12 +36,19 @@ class NoteController extends Controller
      */
     public function store(Request $request)
     {
-        $notes = new Note([
-            'idexamen' => $request->input('idexamen'),
-            'idetudiant' => $request->input('idetudiant'),
+        $validatedData = $request->validate([
+            'etudiant_id' => 'required|integer',
+            'examen_id' => 'required|integer',
+            'valeur' => 'required|decimal',
         ]);
-        $notes->save();
-        return response()->json('');
+    
+        $response = Note::create([
+            'etudiant_id' => $validatedData['etudiant_id'],
+            'examen_id' => $validatedData['question_id'],
+            'valeur' => $validatedData['valeur'],
+        ]);
+    
+        return response()->json($response);
     }
 
     /**

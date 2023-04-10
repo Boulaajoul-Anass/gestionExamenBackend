@@ -15,12 +15,13 @@ class Matiere extends Model
         return $this->belongsTo(Professeur::class);
     }
 
-    public function filiere()
-    {
-        return $this->belongsTo(Filiere::class);
-    }
     public function examens()
     {
         return $this->hasMany(Examen::class);
+    }
+
+    public function filieres()
+    {
+        return $this->hasMany(Filiere::class);
     }
 }

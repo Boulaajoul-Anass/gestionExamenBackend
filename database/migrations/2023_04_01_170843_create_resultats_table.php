@@ -13,12 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('matieres', function (Blueprint $table) {
-            $table->unsignedBigInteger('filiere_id')->nullable();
-            $table->foreign('filiere_id')->references('id')->on('filieres')->onDelete('cascade');
+        Schema::create('resultats', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.
@@ -27,10 +26,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('matieres', function (Blueprint $table) {
-            $table->dropForeign(['filiere_id']);
-            $table->dropColumn('filiere_id');
-        });
+        Schema::dropIfExists('resultats');
     }
-
 };

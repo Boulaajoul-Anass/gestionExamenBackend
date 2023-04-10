@@ -8,20 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class Note extends Model
 {
     use HasFactory;
-    protected $fillable = [
-        'note', 'etudiant_id', 'examen_id'
-    ];
+     protected $fillable = ['etudiant_id', 'examen_id', 'valeur'];
 
-    public function examen()
+     public function examens()
+     {
+         return $this->belongsToMany(Examen::class)->withPivot('valeur');
+     }
+     public function etudiants()
     {
-        return $this->belongsTo(Examen::class);
+        return $this->belongsToMany(Etudiant::class)->withPivot('valeur');
     }
-
-    public function etudiant()
-    {
-        return $this->belongsTo(Etudiant::class);
-    }
-
-
-
 }

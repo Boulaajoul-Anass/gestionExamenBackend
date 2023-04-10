@@ -23,8 +23,11 @@ class Etudiant extends Model
         return $this->belongsToMany(Examen::class)->withPivot('valeur');
     }
 
-    public function notes()
+    public function marks()
     {
-        return $this->hasMany(Note::class);
+        return $this->hasMany(Mark::class);
     }
+
+    
+
 }

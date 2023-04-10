@@ -13,15 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('notes', function (Blueprint $table) {
+        Schema::create('marks', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('etudiant_id');
             $table->unsignedBigInteger('examen_id');
             $table->decimal('valeur', 5, 2);
-            $table->foreign('etudiant_id')->references('id')->on('etudiants')->onDelete('cascade');
-            $table->foreign('examen_id')->references('id')->on('examens')->onDelete('cascade');
             $table->timestamps();
+            $table->foreign('etudiant_id')->references('id')->on('etudiants');
+            $table->foreign('examen_id')->references('id')->on('examens');
         });
     }
+
 
     /**
      * Reverse the migrations.
@@ -30,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('notes');
+        Schema::dropIfExists('marks');
     }
 };

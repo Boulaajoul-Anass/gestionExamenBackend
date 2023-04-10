@@ -25,13 +25,14 @@ class Examen extends Model
         return $this->belongsToMany(Etudiant::class)->withPivot('valeur')->withTimestamps();
     }
 
-    public function notes()
-    {
-        return $this->hasMany(Note::class);
-    }
-
     public function questions()
     {
         return $this->hasMany(Question::class);
     }
+
+    public function marks()
+    {
+        return $this->hasMany(Mark::class);
+    }
+
 }

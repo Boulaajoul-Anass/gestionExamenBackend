@@ -16,6 +16,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\ReponseController;
 use App\Http\Controllers\ResultatController ;
 use App\Http\Controllers\AuthController;
+use App\Models\Mark;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,28 +50,62 @@ Route::post('/logout',[\App\Http\Controllers\AuthController::class, 'logout']);
 Route::post('/login',[\App\Http\Controllers\AuthController::class, 'login']);
 
 //Requete de Correction
-Route::get('etudiant/{etudiant_id}/examen/{examen_id}/resultats', [\App\Http\Controllers\ResultatController::class, 'show']);
 
 //Les exmens des matières de la filière de l'etudiant connécté
 Route::get('/etudiants/{id}/examens', 'App\Http\Controllers\EtudiantController@getExamsByFiliere');
 
+Route::get('/etudiant/{etudiant_id}/examensOfEtudiant', function ($etudiant_id){
+    $examens = DB::table('examens')
+            ->join('matieres', 'examens.matiere_id', '=', 'matieres.id')
+            ->leftJoin('questions', 'examens.id', '=', 'questions.examen_id')
+            ->leftJoin('propositions', 'questions.id', '=', 'propositions.question_id')
+            ->leftJoin('reponses', function ($join) {
+                $join->on('reponses.proposition_id', '=', 'propositions.id')
+                     ->where('reponses.etudiant_id', '=', 4);
+            })
+            ->select('examens.id', 'examens.date', 'examens.heure', 'examens.duree', 'matieres.nom as matiere', DB::raw('SUM(IF(propositions.est_correcte = 1, 1, 0)) as nb_reponses_correctes'))
+            ->groupBy('examens.id', 'examens.date', 'examens.heure', 'examens.duree', 'matieres.nom')
+            ->get();
+
+
+    return response()->json($examens);
+});
+
+
+
+
 //Les exmens déjà passé des matières de la filière de l'etudiant connécté
-Route::get('/etudiants/{id}/examens-passes', 'App\Http\Controllers\EtudiantController@getExamsPassedByEtudiant');
+Route::get('/etudiants/{etudiant_id}/examens/{examen_id}/note', function ($etudiant_id, $examen_id) {
+    $marks = DB::table('marks')
+        ->join('examens', 'marks.examen_id', '=', 'examens.id')
+        ->join('matieres', 'examens.matiere_id', '=', 'matieres.id')
+        ->select('marks.valeur', 'matieres.nom as matiere')
+        ->where('marks.etudiant_id', $etudiant_id)
+        ->where('marks.examen_id', $examen_id)
+        ->first();
+
+    return response()->json([
+        'marks' => $marks->valeur,
+        'matiere' => $marks->matiere
+    ]);
+});
+
+
 
 
 // Departement
-/*
+
 Route::get('/departements',[App\Http\Controllers\DepartementController::class, 'index']);
 Route::post('/departements/save',[App\Http\Controllers\DepartementController::class, 'store']);
 Route::put('/departements/update/{id}',[App\Http\Controllers\DepartementController::class, 'update']);
-Route::delete('/departements/delete/{id}',[App\Http\Controllers\DepartementController::class, 'destroy']);*/
+Route::delete('/departements/delete/{id}',[App\Http\Controllers\DepartementController::class, 'destroy']);
 
 // Filieres
-/*
+
 Route::get('/filieres',[App\Http\Controllers\FiliereController::class, 'index']);
 Route::post('/filieres/save',[App\Http\Controllers\FiliereController::class, 'store']);
 Route::put('/filieres/update/{id}',[App\Http\Controllers\FiliereController::class, 'update']);
-Route::delete('/filieres/delete/{id}',[App\Http\Controllers\FiliereController::class, 'destroy']);*/
+Route::delete('/filieres/delete/{id}',[App\Http\Controllers\FiliereController::class, 'destroy']);
 
 // Etudiant
 
@@ -80,7 +115,32 @@ Route::put('/etudiants/update/{id}',[App\Http\Controllers\EtudiantController::cl
 Route::delete('/etudiants/delete/{id}',[App\Http\Controllers\EtudiantController::class, 'destroy']);
 
 // Examen
+Route::post('/marks/save', function (Request $request) {
+    $mark = new Mark;
+    $mark->etudiant_id = $request->input('etudiant_id');
+    $mark->examen_id = $request->input('examen_id');
+    $mark->valeur = $request->input('valeur');
+    $mark->save();
+
+    return response()->json([
+        'message' => 'Note créée avec succès',
+        'mark' => $mark
+    ]);
+});
+
+
+
+//Requete de Correction
+Route::get('etudiant/{etudiant_id}/examen/{examen_id}/resultats', [\App\Http\Controllers\ResultatController::class, 'show']);
+
+//Les exmens des matières de la filière de l'etudiant connécté
+Route::get('/etudiants/{id}/examens', 'App\Http\Controllers\EtudiantController@getExamsByFiliere');
+
 Route::get('/examens/{filiere_id}',[App\Http\Controllers\ExamenController::class, 'show']);
+
+Route::get('/etudiants/{id}/examens-passes', 'App\Http\Controllers\EtudiantController@getExamsPassedByEtudiant');
+Route::get('/etudiants/{id}/deux-examens-passes', 'App\Http\Controllers\EtudiantController@getTwoExamsPassedByEtudiant');
+
 
 // Les examens d'une filliere donnée
 Route::get('/exams/{filiere_id}', function ($filiere_id) {
@@ -99,6 +159,24 @@ Route::get('/exams/{filiere_id}', function ($filiere_id) {
 use Illuminate\Support\Facades\DB;
 
 
+Route::get('/deux-upcoming-exams/{filiere_id}', function ($filiere_id) {
+    $today = date('Y-m-d');
+    $upcomingExams = DB::table('examens')
+        ->join('matieres', 'examens.matiere_id', '=', 'matieres.id')
+        ->join('professeurs', 'matieres.professeur_id', '=', 'professeurs.id')
+        ->join('filieres', 'matieres.filiere_id', '=', 'filieres.id')
+        ->where('filieres.id', '=', $filiere_id)
+        ->where('date', '>', $today)
+        ->orderBy('heure','asc')
+        ->orderBy('date','asc')
+        ->limit(2)
+        ->select('examens.*', 'matieres.nom as matiere_nom', 'professeurs.nom as professeur_nom', 'filieres.nom as filiere_nom')
+        ->distinct()
+        ->get();
+
+    return response()->json($upcomingExams);
+});
+
 Route::get('/upcoming-exams/{filiere_id}', function ($filiere_id) {
     $today = date('Y-m-d');
     $upcomingExams = DB::table('examens')
@@ -107,7 +185,9 @@ Route::get('/upcoming-exams/{filiere_id}', function ($filiere_id) {
         ->join('filieres', 'matieres.filiere_id', '=', 'filieres.id')
         ->where('filieres.id', '=', $filiere_id)
         ->where('date', '>', $today)
-        ->select('examens.*', 'matieres.nom as matiere_nom', 'professeurs.nom as professeur_nom', 'filieres.nom as filiere_nom')
+        ->orderBy('date','asc')
+        ->orderBy('heure','asc')
+        ->select('examens.*', 'matieres.nom as matiere_nom', 'professeurs.nom as professeur_nom','professeurs.prenom as professeur_prenom', 'filieres.nom as filiere_nom')
         ->distinct()
         ->get();
 
@@ -117,11 +197,12 @@ Route::get('/upcoming-exams/{filiere_id}', function ($filiere_id) {
 
 Route::get('/today-exams-filiere/{filiere_id}', function ($filiere_id) {
     $today = date('Y-m-d');
-    $currentTime = date('H:i:s', strtotime('-2 minute'));
+    $currentTime = date('H:i:s', strtotime('-5 minute'));
     $todayexams = DB::table('examens')
         ->join('matieres', 'examens.matiere_id', '=', 'matieres.id')
         ->join('professeurs', 'matieres.professeur_id', '=', 'professeurs.id')
         ->join('filieres', 'matieres.filiere_id', '=', 'filieres.id')
+        ->join('questions', 'examens.id', '=', 'questions.examen_id')
         ->where('filieres.id', '=', $filiere_id)
         ->where('date', '=', $today)
         ->where('heure', '>', DB::raw("TIME('$currentTime')"))
@@ -131,6 +212,86 @@ Route::get('/today-exams-filiere/{filiere_id}', function ($filiere_id) {
 
     return response()->json($todayexams);
 });
+
+
+use App\Models\Etudiant;
+
+// Route::get('/etudiants/{id_etudiant}/examens/{id_examen}', function (Request $request, $id_etudiant, $id_examen) {
+
+//     $etudiant = Etudiant::findOrFail($id_etudiant);
+//     $examen = $etudiant->examens()->findOrFail($id_examen);
+
+//     $data = [
+//         'etudiant' => [
+//             'id' => $etudiant->id,
+//             'nom' => $etudiant->nom,
+//             'prenom' => $etudiant->prenom,
+//         ],
+//         'examen' => [
+//             'id' => $examen->id,
+//             'date' => $examen->date,
+//             'heure' => $examen->heure,
+//             'duree' => $examen->duree,
+//         ],
+//         'questions' => [],
+//     ];
+
+//     foreach ($examen->questions as $question) {
+//         $reponse = $etudiant->reponses()->where('question_id', $question->id)->first();
+//         $proposition_correcte = $question->propositions()->where('est_correcte', true)->first();
+
+//         $data['questions'][] = [
+//             'id' => $question->id,
+//             'libelle' => $question->libelle,
+//             'proposition_etudiant' => $reponse ? $reponse->proposition->libelle : null,
+//             'proposition_correcte' => $proposition_correcte ? $proposition_correcte->libelle : null,
+//         ];
+//     }
+
+//     return response()->json($data);
+// });
+
+use App\Models\Examen;
+use App\Models\Question;
+use App\Models\Reponse;
+
+Route::get('/etudiants/{etudiant_id}/examens/{examen_id}', [ExamenController::class, 'examenEtudiant']);
+
+
+
+Route::get('/etudiant/{etudiant_id}/exam/{exam_id}/correctes-reponses', function ($etudiant_id, $exam_id) {
+    $correctReponsesCount = DB::table('reponses')
+        ->join('propositions', 'reponses.proposition_id', '=', 'propositions.id')
+        ->join('questions', 'propositions.question_id', '=', 'questions.id')
+        ->join('examens', 'questions.examen_id', '=', 'examens.id')
+        ->where('reponses.etudiant_id', '=', $etudiant_id)
+        ->where('examens.id', '=', $exam_id)
+        ->where('propositions.est_correcte', '=', 1)
+        ->count();
+    return response()->json(['correct_reponses_count' => $correctReponsesCount], 200);
+});
+
+Route::get('/etudiant/{etudiant_id}/exam/{exam_id}/fausses-reponses', function ($etudiant_id, $exam_id) {
+    $correctReponsesCount = DB::table('reponses')
+        ->join('propositions', 'reponses.proposition_id', '=', 'propositions.id')
+        ->join('questions', 'propositions.question_id', '=', 'questions.id')
+        ->join('examens', 'questions.examen_id', '=', 'examens.id')
+        ->where('reponses.etudiant_id', '=', $etudiant_id)
+        ->where('examens.id', '=', $exam_id)
+        ->where('propositions.est_correcte', '=', 0)
+        ->count();
+    return response()->json(['correct_reponses_count' => $correctReponsesCount], 200);
+});
+
+Route::get('/examens/{exam_id}/questions-count', function ($exam_id) {
+    $questionsCount = DB::table('questions')
+        ->where('examen_id', $exam_id)
+        ->count();
+
+    return response()->json(['questions_count' => $questionsCount], 200);
+});
+
+
 
 
 
@@ -153,6 +314,11 @@ Route::get('/matieres',[App\Http\Controllers\MatiereController::class, 'index'])
 Route::post('/matieres/save',[App\Http\Controllers\MatiereController::class, 'store']);
 Route::put('/matieres/update/{id}',[App\Http\Controllers\MatiereController::class, 'update']);
 Route::delete('/matieres/delete/{id}',[App\Http\Controllers\MatiereController::class, 'destroy']);
+
+
+Route::get('/examens/{examen_id}/questions/{etudiant_id}', 'App\Http\Controllers\ExamenController@getQuestionsWithAnswersAndPropositions');
+
+
 
 // Note
 Route::get('/notes',[App\Http\Controllers\NoteController::class, 'index']);

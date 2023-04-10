@@ -36,14 +36,21 @@ class ReponseController extends Controller
      */
     public function store(Request $request)
     {
-        $reponses = new Reponse([
-            'idquestion' => $request->input('idquestion'),
-            'idetudiant' => $request->input('idetudiant'),
-            'idproposition' => $request->input('idproposition'),
+        $validatedData = $request->validate([
+            'etudiant_id' => 'required|integer',
+            'question_id' => 'required|integer',
+            'proposition_id' => 'required|integer',
         ]);
-        $reponses->save();
-        return response()->json('');
+    
+        $response = Reponse::create([
+            'etudiant_id' => $validatedData['etudiant_id'],
+            'question_id' => $validatedData['question_id'],
+            'proposition_id' => $validatedData['proposition_id'],
+        ]);
+    
+        return response()->json($response);
     }
+
 
     /**
      * Display the specified resource.
